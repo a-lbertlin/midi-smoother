@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import glob
 import argparse
 import traceback
 
@@ -8,28 +9,31 @@ import midi
 
 def edit_control64(args):
 
-    infile = args.infile
-    outfile = ".".join(infile.split(".")[:-1]) + "-1." + infile.split(".")[-1]
+    infiles = glob.glob(args.infiles)
     threshold = 60
-    if args.outfile:
-        outfile = args.outfile
     if args.threshold:
         threshold = args.threshold
 
-    # Read MIDI file
-    pattern = midi.read_midifile(infile)
+    for infile in infiles:
+        if len(infiles) == 1 and args.outfile:
+            outfile = args.outfile
+        else:
+            outfile = ".".join(infile.split(".")[:-1]) + "-1." + infile.split(".")[-1]
 
-    # Support only one track
-    tracks = pattern[0]
+        # Read MIDI file
+        pattern = midi.read_midifile(infile)
 
-    for event in tracks:
-        if isinstance(event, midi.events.ControlChangeEvent):
-            # midi.ControlChangeEvent(tick=36, channel=0, data=[64, 37])
-            if (event.data[0] == 64 and event.data[1] <= threshold):
-                event.data[1] = 0
+        # Support only one track
+        tracks = pattern[0]
 
-    # Write MIDI file
-    midi.write_midifile(outfile, pattern)
+        for event in tracks:
+            if isinstance(event, midi.events.ControlChangeEvent):
+                # midi.ControlChangeEvent(tick=36, channel=0, data=[64, 37])
+                if (event.data[0] == 64 and event.data[1] <= threshold):
+                    event.data[1] = 0
+
+        # Write MIDI file
+        midi.write_midifile(outfile, pattern)
 
 
 def get_parser():
@@ -49,7 +53,7 @@ def get_parser():
                         help="threshold of control 64 sustain, [1-127, default=60]",
                         default=60, dest="threshold")
     parser.add_argument("-o", "--outfile", type=str, help="output MIDI file", dest="outfile")
-    parser.add_argument("infile", metavar="INFILE", help="MIDI file")
+    parser.add_argument("infiles", metavar="INFILES", help="MIDI files (wildcard is supported)")
 
     return parser
 
