@@ -18,19 +18,18 @@ def edit_control64(args):
         if len(infiles) == 1 and args.outfile:
             outfile = args.outfile
         else:
-            outfile = ".".join(infile.split(".")[:-1]) + "-1." + infile.split(".")[-1]
+            outfile = ".".join(infile.split(".")[:-1]) + "-t" + str(threshold) \
+                      + "." + infile.split(".")[-1]
 
         # Read MIDI file
         pattern = midi.read_midifile(infile)
 
-        # Support only one track
-        tracks = pattern[0]
-
-        for event in tracks:
-            if isinstance(event, midi.events.ControlChangeEvent):
-                # midi.ControlChangeEvent(tick=36, channel=0, data=[64, 37])
-                if (event.data[0] == 64 and event.data[1] <= threshold):
-                    event.data[1] = 0
+        for track in pattern:
+            for event in track:
+                if isinstance(event, midi.events.ControlChangeEvent):
+                    # midi.ControlChangeEvent(tick=36, channel=0, data=[64, 37])
+                    if (event.data[0] == 64 and event.data[1] <= threshold):
+                        event.data[1] = 0
 
         # Write MIDI file
         midi.write_midifile(outfile, pattern)
