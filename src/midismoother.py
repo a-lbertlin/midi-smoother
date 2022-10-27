@@ -94,8 +94,8 @@ def dump(args):
 def get_parser():
 
     parser = argparse.ArgumentParser(prog="midismoother",
-                                     description="Midi smoother utility",
-                                     version="1.1")
+                                     description="Midi smoother utility")
+    parser.add_argument("-V", "--version", action="version", version="%(prog)s 2.0")
 
     # Common arguments
     common = argparse.ArgumentParser(add_help=False)
