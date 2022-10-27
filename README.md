@@ -25,25 +25,22 @@ Use pyinstaller to package the utility to single executable file.
 
 Run the midismoother/midismoother.exe on Linux/Windows.
 
-    usage: midismoother [-h] [-v] [-o OUTFILE] COMMANDS ... INFILES
+    usage: midismoother [-h] [-v] COMMANDS ...
 
     Midi smoother utility
 
     positional arguments:
       COMMANDS
-        edit-ctrl64         edit ControlChangeEvent 64
-        edit-note           edit NoteOnEvent/NoteOffEvent
-        dump                dump the MIDI file
-      INFILES               MIDI files (wildcard is supported)
+        edit-ctrl64  edit ControlChangeEvent 64
+        edit-note    edit NoteOnEvent/NoteOffEvent
+        dump         dump the MIDI file
 
     optional arguments:
-      -h, --help            show this help message and exit
-      -v, --version         show program's version number and exit
-      -o OUTFILE, --outfile OUTFILE
-                            output MIDI file
+      -h, --help     show this help message and exit
+      -v, --version  show program's version number and exit
 
 Examples:
 
     $ midismoother edit-ctrl64 -t 64 -o new.mid origin.mid
-    $ midismoother edit-note -lt 20 -ht 90 *.mid
+    $ midismoother edit-note -lt 20 -ht 90 "*.mid"
     

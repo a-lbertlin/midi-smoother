@@ -97,22 +97,26 @@ def get_parser():
                                      description="Midi smoother utility",
                                      version="1.1")
 
-    # parent arguments
-    parser.add_argument("-o", "--outfile", type=str, help="output MIDI file", dest="outfile")
-    subparsers = parser.add_subparsers(metavar="COMMANDS", dest="command")
-    parser.add_argument("infiles", metavar="INFILES",
+    # Common arguments
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("-o", "--outfile", type=str, help="output MIDI file", dest="outfile")
+    common.add_argument("infiles", metavar="INFILES",
                         help="MIDI files (wildcard is supported)")
 
+    subparsers = parser.add_subparsers(metavar="COMMANDS", dest="command")
+
     # Command: edit-ctrl64
-    parser_ctrl64 = subparsers.add_parser("edit-ctrl64", parents=[parser], add_help=False,
-                                          help="edit ControlChangeEvent 64")
+    parser_ctrl64 = subparsers.add_parser("edit-ctrl64", parents=[common],
+            description="To edit midi incremental pedal signals (control 64 sustain)",
+            help="edit ControlChangeEvent 64")
     parser_ctrl64.set_defaults(function=edit_control64)
     parser_ctrl64.add_argument("-t", "--threshold", type=int, default=60, dest="threshold",
                                help="threshold of control 64 sustain, [1-127, default=60]")
 
     # Command: edit-note
-    parser_note = subparsers.add_parser("edit-note", parents=[parser], add_help=False,
-                                        help="edit NoteOnEvent/NoteOffEvent")
+    parser_note = subparsers.add_parser("edit-note", parents=[common],
+            description="To cut notes above the high threshold and/or under the low threshold",
+            help="edit NoteOnEvent/NoteOffEvent")
     parser_note.set_defaults(function=edit_note)
     parser_note.add_argument("-lt", "--low-threshold", type=int, dest="low_threshold",
                              help="cute notes under the threshold")
@@ -120,8 +124,9 @@ def get_parser():
                              help="cute notes above the threshold")
 
     # Command: dump
-    parser_dump = subparsers.add_parser("dump", parents=[parser], add_help=False,
-                                        help="dump the MIDI file")
+    parser_dump = subparsers.add_parser("dump", parents=[common],
+            description="To dump the content of the MIDI file in readable format",
+            help="dump the MIDI file")
     parser_dump.set_defaults(function=dump)
 
     if len(sys.argv) == 1:
