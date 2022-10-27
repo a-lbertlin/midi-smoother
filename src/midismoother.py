@@ -97,34 +97,32 @@ def get_parser():
                                      description="Midi smoother utility",
                                      version="1.1")
 
-    # Common arguments
+    # parent arguments
     parser.add_argument("-o", "--outfile", type=str, help="output MIDI file", dest="outfile")
-
     subparsers = parser.add_subparsers(metavar="COMMANDS", dest="command")
+    parser.add_argument("infiles", metavar="INFILES",
+                        help="MIDI files (wildcard is supported)")
 
     # Command: edit-ctrl64
-    parser_ctrl64 = subparsers.add_parser("edit-ctrl64", help="edit ControlChangeEvent 64")
+    parser_ctrl64 = subparsers.add_parser("edit-ctrl64", parents=[parser], add_help=False,
+                                          help="edit ControlChangeEvent 64")
     parser_ctrl64.set_defaults(function=edit_control64)
     parser_ctrl64.add_argument("-t", "--threshold", type=int, default=60, dest="threshold",
                                help="threshold of control 64 sustain, [1-127, default=60]")
-    parser_ctrl64.add_argument("infiles", metavar="INFILES",
-                               help="MIDI files (wildcard is supported)")
 
     # Command: edit-note
-    parser_note = subparsers.add_parser("edit-note", help="edit NoteOnEvent/NoteOffEvent")
+    parser_note = subparsers.add_parser("edit-note", parents=[parser], add_help=False,
+                                        help="edit NoteOnEvent/NoteOffEvent")
     parser_note.set_defaults(function=edit_note)
     parser_note.add_argument("-lt", "--low-threshold", type=int, dest="low_threshold",
                              help="cute notes under the threshold")
     parser_note.add_argument("-ht", "--high-threshold", type=int, dest="high_threshold",
                              help="cute notes above the threshold")
-    parser_note.add_argument("infiles", metavar="INFILES", 
-                             help="MIDI files (wildcard is supported)")
 
     # Command: dump
-    parser_dump = subparsers.add_parser("dump", help="dump the MIDI file")
+    parser_dump = subparsers.add_parser("dump", parents=[parser], add_help=False,
+                                        help="dump the MIDI file")
     parser_dump.set_defaults(function=dump)
-    parser_dump.add_argument("infiles", metavar="INFILES",
-                             help="MIDI files (wildcard is supported)")
 
     if len(sys.argv) == 1:
         parser.print_help()
