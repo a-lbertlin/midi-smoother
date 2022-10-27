@@ -70,8 +70,16 @@ def edit_note(args):
         # Read MIDI file
         pattern = midi.read_midifile(infile)
 
+        #for track in pattern:
+        #    track[:] = [e for e in track if not toRemove(e)]
+
         for track in pattern:
-            track[:] = [e for e in track if not toRemove(e)]
+            for event in track:
+                if isinstance(event, midi.events.NoteOnEvent) or \
+                        isinstance(event, midi.events.NoteOffEvent):
+                   if event.data[0] <= low_threshold or event.data[0] >= high_threshold:
+                        event.data[0] = 0
+                        event.data[1] = 0
 
         # Write MIDI file
         midi.write_midifile(outfile, pattern)
