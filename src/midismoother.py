@@ -34,25 +34,101 @@ def edit_control64(args):
         # Write MIDI file
         midi.write_midifile(outfile, pattern)
 
+def edit_note(args):
+
+    def toRemove(e):
+        # midi.NoteOnEvent(tick=1, channel=0, data=[75, 18])
+        # midi.NoteOffEvent(tick=1, channel=0, data=[75, 64])
+        if isinstance(e, midi.events.NoteOnEvent) \
+            or isinstance(e, midi.events.NoteOffEvent):
+            if e.data[0] <= low_threshold or e.data[0] >= high_threshold:
+                return True
+        return False
+
+    infiles = glob.glob(args.infiles)
+
+    append = ""
+    if args.low_threshold:
+        low_threshold = args.low_threshold
+        append += "-lt" + str(low_threshold)
+    else:
+        low_threshold = 0
+
+    if args.high_threshold:
+        high_threshold = args.high_threshold
+        append += "-ht" + str(high_threshold)
+    else:
+        high_threshold = 999
+        
+    for infile in infiles:
+        if len(infiles) == 1 and args.outfile:
+            outfile = args.outfile
+        else:
+            outfile = ".".join(infile.split(".")[:-1]) + append \
+                      + "." + infile.split(".")[-1]
+
+        # Read MIDI file
+        pattern = midi.read_midifile(infile)
+
+        for track in pattern:
+            track[:] = [e for e in track if not toRemove(e)]
+
+        # Write MIDI file
+        midi.write_midifile(outfile, pattern)
+
+def dump(args):
+    infiles = glob.glob(args.infiles)
+
+    for infile in infiles:
+        if len(infiles) == 1 and args.outfile:
+            outfile = args.outfile
+        else:
+            outfile = infile + ".dump"
+
+        # Read MIDI file
+        pattern = midi.read_midifile(infile)
+
+        with open(outfile, 'w') as f:
+            f.write(repr(pattern))
 
 def get_parser():
 
     parser = argparse.ArgumentParser(prog="midismoother",
                                      description="Midi smoother utility",
-                                     version="1.0",
-                                     add_help=True)
-    parser.print_usage = parser.print_help
+                                     version="1.1")
+
+    # Common arguments
+    parser.add_argument("-o", "--outfile", type=str, help="output MIDI file", dest="outfile")
+
+    subparsers = parser.add_subparsers(metavar="COMMANDS", dest="command")
+
+    # Command: edit-ctrl64
+    parser_ctrl64 = subparsers.add_parser("edit-ctrl64", help="edit ControlChangeEvent 64")
+    parser_ctrl64.set_defaults(function=edit_control64)
+    parser_ctrl64.add_argument("-t", "--threshold", type=int, default=60, dest="threshold",
+                               help="threshold of control 64 sustain, [1-127, default=60]")
+    parser_ctrl64.add_argument("infiles", metavar="INFILES",
+                               help="MIDI files (wildcard is supported)")
+
+    # Command: edit-note
+    parser_note = subparsers.add_parser("edit-note", help="edit NoteOnEvent/NoteOffEvent")
+    parser_note.set_defaults(function=edit_note)
+    parser_note.add_argument("-lt", "--low-threshold", type=int, dest="low_threshold",
+                             help="cute notes under the threshold")
+    parser_note.add_argument("-ht", "--high-threshold", type=int, dest="high_threshold",
+                             help="cute notes above the threshold")
+    parser_note.add_argument("infiles", metavar="INFILES", 
+                             help="MIDI files (wildcard is supported)")
+
+    # Command: dump
+    parser_dump = subparsers.add_parser("dump", help="dump the MIDI file")
+    parser_dump.set_defaults(function=dump)
+    parser_dump.add_argument("infiles", metavar="INFILES",
+                             help="MIDI files (wildcard is supported)")
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-
-    parser.set_defaults(function=edit_control64)
-    parser.add_argument("-t", "--threshold", type=int,
-                        help="threshold of control 64 sustain, [1-127, default=60]",
-                        default=60, dest="threshold")
-    parser.add_argument("-o", "--outfile", type=str, help="output MIDI file", dest="outfile")
-    parser.add_argument("infiles", metavar="INFILES", help="MIDI files (wildcard is supported)")
 
     return parser
 
