@@ -19,7 +19,7 @@ Python MIDI library - by vishnubob
 
 Use pyinstaller to package the utility to single executable file.
 
-    $ pyinstaller -F midismoother
+    $ pyinstaller -F src/midismoother.py
 
 ## Usage
 
