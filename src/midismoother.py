@@ -84,6 +84,79 @@ def edit_note(args):
         # Write MIDI file
         midi.write_midifile(outfile, pattern)
 
+def link_notes(args):
+
+    infiles = glob.glob(args.infiles)
+
+    for infile in infiles:
+
+        if len(infiles) == 1 and args.outfile:
+            outfile = args.outfile
+        else:
+            outfile = ".".join(infile.split(".")[:-1]) + "-link" \
+                      + "." + infile.split(".")[-1]
+
+        # Read MIDI file
+        pattern = midi.read_midifile(infile)
+        print("File: %s, Tracks: %s" % (infile, len(pattern)))
+
+        for track in pattern:
+            length = len(track)
+            print("Events: %s" % length)
+            for i in range(length):
+
+                # Search NoteOffEvent
+                if isinstance(track[i], midi.events.NoteOffEvent):
+                    ##print("%s: %s" % (i, track[i]))
+
+                    # midi.NoteOffEvent(tick=0, channel=0, data=[69, 64]),
+                    eventoff = track[i]
+                    channel = eventoff.channel
+                    note = eventoff.data[0]
+                    tick = eventoff.tick
+
+                    for j in range(i+1, length):
+                        event = track[j]
+                        # not concomitant note off/on
+                        if event.tick > 0:
+                            break
+
+                        ##print("\t%s: %s" % (j, track[j]))
+                        # skip events other than NoteOnEvent and not the same note
+                        if (not isinstance(track[j], midi.events.NoteOnEvent)) \
+                            or (event.channel != channel) or (event.data[0] != note):
+                            continue
+
+                        # found
+                        #print(track[i])
+                        #print(track[j])
+
+                        ## set tick to -1 for removal later
+                        track[i].tick = -1      # concomitant NoteOffEvent
+                        track[j].tick = -1      # concomitant NoteOnEvent
+
+                        ## add the NoteOffEvent tick to next event
+                        if tick > 0:
+                            for k in range(i+1, length):
+                                ##print("\t\t%s: %s" % (k, track[k]))
+                                if track[k].tick == -1:
+                                    continue
+                                #print(track[k])
+                                track[k].tick += tick
+                                #print("adjust tick to %s" % track[k].tick)
+                                break
+
+                        break
+
+            # Remove events
+            for event in track[:]:
+                if event.tick == -1:
+                    track.remove(event)           
+            print("New Events: %s" % len(track))
+
+        # Write MIDI file
+        midi.write_midifile(outfile, pattern)
+
 def dump(args):
     infiles = glob.glob(args.infiles)
 
@@ -130,6 +203,12 @@ def get_parser():
                              help="cute notes under the threshold")
     parser_note.add_argument("-ht", "--high-threshold", type=int, dest="high_threshold",
                              help="cute notes above the threshold")
+
+    # Command: link-note
+    parser_dump = subparsers.add_parser("link-notes", parents=[common],
+            description="To remove the note off and on events at the same tick (delta time 0)",
+            help="remove concomitant note off and on")
+    parser_dump.set_defaults(function=link_notes)    
 
     # Command: dump
     parser_dump = subparsers.add_parser("dump", parents=[common],
