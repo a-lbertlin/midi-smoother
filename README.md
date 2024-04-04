@@ -18,6 +18,12 @@ Python MIDI library - by vishnubob
 ```
 https://github.com/vishnubob/python-midi
 ```
+Installation for **Python3**
+```
+$ git clone https://github.com/vishnubob/python-midi.git -b feature/python3
+$ cd python-midi
+$ pip install .
+```
 
 ## Build binary
 
